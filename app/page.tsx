@@ -12,6 +12,7 @@ const navItems = [
   { label: "Atuação", href: "#atuacao" },
   { label: "Metodologia", href: "#metodologia" },
   { label: "Reconhecimento", href: "#reconhecimento" },
+  { label: "Avisos", href: "#avisos" },
   { label: "Contato", href: "#contato" },
 ];
 
@@ -152,22 +153,61 @@ function InstagramIcon() {
   );
 }
 
-function CourseInterestModal({
-  course,
+const inputClasses =
+  "h-12 rounded-xl border border-[#1F3A5F] bg-[#101820] px-4 text-base font-medium text-white outline-none transition focus:border-[#1FAF8F] placeholder:text-[#D7DEE8]/35";
+
+function CourseInterestForm({
+  initialCourse,
   onClose,
+  onSuccess,
 }: {
-  course: string;
+  initialCourse: string;
   onClose: () => void;
+  onSuccess: (whatsappUrl: string) => void;
 }) {
+  const [nome, setNome] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [curso, setCurso] = useState(initialCourse);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/solicitacoes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome, whatsapp, cidade, curso }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error("request-failed");
+      }
+
+      onSuccess(data.whatsappUrl as string);
+    } catch {
+      setError(
+        "Não foi possível enviar sua solicitação agora. Tente novamente em instantes.",
+      );
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 px-5 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-black/70 px-5 py-10 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-[28px] border border-[#1FAF8F]/30 bg-[#0A2540] p-8 shadow-[0_30px_90px_rgba(0,0,0,0.55)]"
+        className="mx-4 w-full max-w-lg overflow-hidden rounded-[28px] border border-[#1FAF8F]/30 bg-[#0A2540] p-8 shadow-[0_30px_90px_rgba(0,0,0,0.55)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex justify-end">
@@ -180,22 +220,210 @@ function CourseInterestModal({
             ✕
           </button>
         </div>
+
         <p className="mt-2 text-sm font-bold uppercase tracking-[0.22em] text-[#1FAF8F]">
           Tenho interesse
         </p>
         <h3 className="mt-3 text-2xl font-black leading-tight text-white">
-          {course}
+          Solicitar proposta
         </h3>
-        <p className="mt-6 text-base font-semibold text-[#D7DEE8]/80">
-          Formulário em breve.
+        <p className="mt-3 text-sm leading-6 text-[#D7DEE8]/80">
+          Preencha seus dados e fale direto com Marcelo pelo WhatsApp.
         </p>
+
+        <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
+          <label className="grid gap-2 text-sm font-semibold text-[#D7DEE8]">
+            Nome
+            <input
+              type="text"
+              required
+              value={nome}
+              onChange={(event) => setNome(event.target.value)}
+              className={inputClasses}
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-[#D7DEE8]">
+            WhatsApp
+            <input
+              type="text"
+              required
+              placeholder="31999998888"
+              value={whatsapp}
+              onChange={(event) => setWhatsapp(event.target.value)}
+              className={inputClasses}
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-[#D7DEE8]">
+            Cidade
+            <input
+              type="text"
+              required
+              value={cidade}
+              onChange={(event) => setCidade(event.target.value)}
+              className={inputClasses}
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-[#D7DEE8]">
+            Curso de interesse
+            <select
+              required
+              value={curso}
+              onChange={(event) => setCurso(event.target.value)}
+              className={inputClasses}
+            >
+              {courseCategories.map((category) => (
+                <optgroup key={category.title} label={category.title}>
+                  {category.courses.map((course) => (
+                    <option key={course} value={course}>
+                      {course}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+
+          {error && (
+            <p className="text-sm font-semibold text-[#FF8C8C]">{error}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="mt-2 inline-flex h-[52px] items-center justify-center rounded-full bg-[#1FAF8F] px-7 text-sm font-extrabold text-[#06131f] transition hover:bg-[#34d1ad] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? "Enviando..." : "Solicitar proposta"}
+          </button>
+        </form>
       </div>
     </div>
   );
 }
 
+function NotifyMeForm() {
+  const [nome, setNome] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [curso, setCurso] = useState("Qualquer curso");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/solicitacoes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome, whatsapp, cidade: "", curso }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error("request-failed");
+      }
+
+      setSubmitted(true);
+    } catch {
+      setError(
+        "Não foi possível enviar agora. Tente novamente em instantes.",
+      );
+      setIsSubmitting(false);
+    }
+  }
+
+  if (submitted) {
+    return (
+      <p className="mt-10 max-w-xl rounded-2xl border border-[#1FAF8F]/30 bg-[#0D0D0D]/45 p-6 text-lg font-bold text-white">
+        Anotado! Você será avisado quando o curso abrir.
+      </p>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mt-10 grid max-w-2xl gap-4 sm:grid-cols-2"
+    >
+      <label className="grid gap-2 text-sm font-semibold text-[#D7DEE8]">
+        Nome
+        <input
+          type="text"
+          required
+          value={nome}
+          onChange={(event) => setNome(event.target.value)}
+          className={inputClasses}
+        />
+      </label>
+
+      <label className="grid gap-2 text-sm font-semibold text-[#D7DEE8]">
+        WhatsApp
+        <input
+          type="text"
+          required
+          placeholder="31999998888"
+          value={whatsapp}
+          onChange={(event) => setWhatsapp(event.target.value)}
+          className={inputClasses}
+        />
+      </label>
+
+      <label className="grid gap-2 text-sm font-semibold text-[#D7DEE8] sm:col-span-2">
+        Curso de interesse
+        <select
+          required
+          value={curso}
+          onChange={(event) => setCurso(event.target.value)}
+          className={inputClasses}
+        >
+          <option value="Qualquer curso">Qualquer curso</option>
+          {courseCategories.map((category) => (
+            <optgroup key={category.title} label={category.title}>
+              {category.courses.map((course) => (
+                <option key={course} value={course}>
+                  {course}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </label>
+
+      {error && (
+        <p className="text-sm font-semibold text-[#FF8C8C] sm:col-span-2">
+          {error}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="mt-2 inline-flex h-[52px] w-full items-center justify-center rounded-full bg-[#1FAF8F] px-7 text-sm font-extrabold text-[#06131f] transition hover:bg-[#34d1ad] disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2 sm:w-auto"
+      >
+        {isSubmitting ? "Enviando..." : "Me avisa"}
+      </button>
+    </form>
+  );
+}
+
 export default function Home() {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState<string | null>(null);
+
+  function handleRequestSuccess(whatsappUrl: string) {
+    setSelectedCourse(null);
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    setConfirmation(
+      "Solicitação enviada! Abrimos o WhatsApp para você falar com Marcelo.",
+    );
+    window.setTimeout(() => setConfirmation(null), 3000);
+  }
 
   return (
     <main className="min-h-screen bg-[#0D0D0D] text-white">
@@ -602,6 +830,25 @@ export default function Home() {
         </div>
       </section>
 
+      <section
+        id="avisos"
+        className="bg-[#081827] px-5 py-20 sm:px-8 lg:px-12 lg:py-28"
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-2xl">
+            <SectionLabel>Fique por dentro</SectionLabel>
+            <h2 className="text-4xl font-black leading-tight tracking-tight sm:text-5xl">
+              Quero ser avisado quando o próximo curso abrir.
+            </h2>
+            <p className="mt-4 text-lg leading-8 text-[#D7DEE8]/85">
+              Deixe seu contato e avise quando houver novidades.
+            </p>
+          </div>
+
+          <NotifyMeForm />
+        </div>
+      </section>
+
       <section id="contato" className="px-5 pb-20 sm:px-8 lg:px-12 lg:pb-28">
         <div className="mx-auto overflow-hidden rounded-[32px] border border-[#1FAF8F]/30 bg-[linear-gradient(135deg,#0A2540_0%,#0D0D0D_72%)] p-8 shadow-[0_32px_100px_rgba(0,0,0,0.45)] sm:p-12 lg:p-16">
           <div className="grid gap-10 lg:grid-cols-[1fr_360px] lg:items-center">
@@ -649,10 +896,19 @@ export default function Home() {
       </section>
 
       {selectedCourse && (
-        <CourseInterestModal
-          course={selectedCourse}
+        <CourseInterestForm
+          initialCourse={selectedCourse}
           onClose={() => setSelectedCourse(null)}
+          onSuccess={handleRequestSuccess}
         />
+      )}
+
+      {confirmation && (
+        <div className="fixed inset-x-0 bottom-6 z-[70] flex justify-center px-5">
+          <div className="rounded-full border border-[#1FAF8F]/40 bg-[#0A2540]/95 px-6 py-3 text-center text-sm font-bold text-white shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-md">
+            {confirmation}
+          </div>
+        </div>
       )}
     </main>
   );

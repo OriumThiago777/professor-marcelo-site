@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 
 const WHATSAPP_URL =
@@ -5,6 +8,7 @@ const WHATSAPP_URL =
 const INSTAGRAM_URL = "https://www.instagram.com/prof.marcelofelix";
 
 const navItems = [
+  { label: "Cursos", href: "#cursos" },
   { label: "Atuação", href: "#atuacao" },
   { label: "Metodologia", href: "#metodologia" },
   { label: "Reconhecimento", href: "#reconhecimento" },
@@ -64,6 +68,45 @@ const audienceItems = [
   "Treinamentos in company",
 ];
 
+const courseCategories = [
+  {
+    title: "Primeiros Socorros e Suporte à Vida",
+    courses: [
+      "Primeiros Socorros",
+      "Primeiros Socorros — Lei Lucas",
+      "Suporte Básico de Vida e Uso do Desfibrilador",
+    ],
+  },
+  {
+    title: "Urgência e Emergência",
+    courses: [
+      "Urgência e Emergência",
+      "Emergências Clínicas",
+      "Emergências Geriátricas",
+      "Emergências Pediátricas",
+      "Atendimento Inicial ao Politraumatizado",
+    ],
+  },
+  {
+    title: "Procedimentos Técnicos",
+    courses: [
+      "Acessos Difíceis",
+      "Acessos Venosos Guiados por Ultrassom",
+      "Manejo de Vias Aéreas e Dispositivos de Oxigenação",
+      "Punção Intraóssea",
+      "Sutura para Enfermeiros",
+      "Punção Intra-Arterial e Instalação de PIA",
+      "PICC",
+      "Avaliação Básica de ECG",
+      "Administração de Injetáveis",
+    ],
+  },
+  {
+    title: "Formação Complementar",
+    courses: ["Cuidador de Idosos"],
+  },
+];
+
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="mb-4 text-sm font-bold uppercase tracking-[0.22em] text-[#1FAF8F]">
@@ -109,7 +152,51 @@ function InstagramIcon() {
   );
 }
 
+function CourseInterestModal({
+  course,
+  onClose,
+}: {
+  course: string;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 px-5 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-[28px] border border-[#1FAF8F]/30 bg-[#0A2540] p-8 shadow-[0_30px_90px_rgba(0,0,0,0.55)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-[#D7DEE8] transition hover:border-[#1FAF8F]/60 hover:text-[#1FAF8F]"
+          >
+            ✕
+          </button>
+        </div>
+        <p className="mt-2 text-sm font-bold uppercase tracking-[0.22em] text-[#1FAF8F]">
+          Tenho interesse
+        </p>
+        <h3 className="mt-3 text-2xl font-black leading-tight text-white">
+          {course}
+        </h3>
+        <p className="mt-6 text-base font-semibold text-[#D7DEE8]/80">
+          Formulário em breve.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+
   return (
     <main className="min-h-screen bg-[#0D0D0D] text-white">
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0D0D0D]/88 px-5 py-4 backdrop-blur-xl sm:px-8 lg:px-12">
@@ -223,6 +310,46 @@ export default function Home() {
               </p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section id="cursos" className="px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <SectionLabel>Cursos</SectionLabel>
+            <h2 className="text-4xl font-black leading-tight tracking-tight sm:text-5xl">
+              Formação especializada para cada etapa do cuidado.
+            </h2>
+          </div>
+
+          <div className="mt-12 space-y-12">
+            {courseCategories.map((category) => (
+              <div key={category.title}>
+                <h3 className="text-xl font-extrabold text-[#1FAF8F]">
+                  {category.title}
+                </h3>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {category.courses.map((course) => (
+                    <article
+                      key={course}
+                      className="flex flex-col justify-between gap-6 rounded-2xl border border-[#1F3A5F] bg-[#101820] p-6 transition hover:border-[#1FAF8F]/70 hover:bg-[#102437]"
+                    >
+                      <h4 className="text-lg font-extrabold leading-snug text-white">
+                        {course}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCourse(course)}
+                        className="inline-flex h-11 items-center justify-center self-start rounded-full bg-[#1FAF8F] px-5 text-sm font-extrabold text-[#06131f] transition hover:bg-[#34d1ad]"
+                      >
+                        Tenho interesse
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -520,6 +647,13 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {selectedCourse && (
+        <CourseInterestModal
+          course={selectedCourse}
+          onClose={() => setSelectedCourse(null)}
+        />
+      )}
     </main>
   );
 }
